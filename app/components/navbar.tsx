@@ -2,6 +2,12 @@ import Link from "next/link";
 import Image from "next/image";
 import { buttonStyles } from "./button";
 
+const navLinks = [
+  { label: "Beranda", href: "/" },
+  { label: "Menu", href: "/products" },
+  { label: "Tentang", href: "/about" },
+];
+
 export default function Navbar() {
   return (
     <header className="sticky top-0 z-50 border-b border-cream-400 bg-cream-50/90 backdrop-blur">
@@ -11,11 +17,23 @@ export default function Navbar() {
             href="/"
             className="flex items-center font-bold text-strawberry-700"
           >
-            <span className="mx-1 inline-block rounded-lg bg-strawberry-700 px-2 py-1 text-cream-50">
+            <span className="mr-1 inline-block rounded-lg bg-strawberry-700 px-2 py-1 text-cream-50">
               Hadish
             </span>
             Cake
           </Link>
+
+          <nav className="hidden items-center gap-6 md:flex">
+            {navLinks.map((link) => (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="text-sm font-medium text-cocoa-700 transition duration-300 hover:text-strawberry-700"
+              >
+                {link.label}
+              </Link>
+            ))}
+          </nav>
 
           <div className="flex items-center gap-3">
             <button
