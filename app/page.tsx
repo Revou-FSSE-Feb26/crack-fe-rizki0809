@@ -2,45 +2,14 @@ import Link from "next/link";
 import Button, { buttonStyles } from "./components/button";
 import Card from "./components/card";
 import Input from "./components/input";
+import { categories, formatPrice, products } from "./data/products";
+
+const bestSellers = products.filter((product) => product.bestSeller);
 
 const stats = [
   { value: "500+", label: "Pelanggan senang" },
   { value: "20+", label: "Varian kue" },
   { value: "4.9", label: "Rating pembeli" },
-];
-
-const categories = [
-  { name: "Birthday Cake", emoji: "🎂", tone: "bg-strawberry-100" },
-  { name: "Cupcake", emoji: "🧁", tone: "bg-butter-100" },
-  { name: "Pastry", emoji: "🥐", tone: "bg-pistachio-100" },
-  { name: "Custom Cake", emoji: "🍰", tone: "bg-blueberry-100" },
-];
-
-const products = [
-  {
-    name: "Strawberry Shortcake",
-    price: "Rp 185.000",
-    emoji: "🍰",
-    tone: "bg-strawberry-100",
-  },
-  {
-    name: "Vanilla Cupcake",
-    price: "Rp 25.000",
-    emoji: "🧁",
-    tone: "bg-butter-100",
-  },
-  {
-    name: "Matcha Roll Cake",
-    price: "Rp 150.000",
-    emoji: "🍵",
-    tone: "bg-pistachio-100",
-  },
-  {
-    name: "Blueberry Cheesecake",
-    price: "Rp 210.000",
-    emoji: "🫐",
-    tone: "bg-blueberry-100",
-  },
 ];
 
 const features = [
@@ -135,7 +104,11 @@ export default function Home() {
 
         <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
           {categories.map((category) => (
-            <Link key={category.name} href="/products" className="group">
+            <Link
+              key={category.slug}
+              href={`/products?kategori=${category.slug}`}
+              className="group"
+            >
               <Card
                 variant="soft"
                 className="text-center transition duration-300 group-hover:border-strawberry-300"
@@ -171,7 +144,7 @@ export default function Home() {
           </div>
 
           <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {products.map((product) => (
+            {bestSellers.map((product) => (
               <Card key={product.name} className="flex flex-col">
                 <div
                   className={`flex aspect-[4/3] items-center justify-center rounded-2xl text-5xl ${product.tone}`}
@@ -183,7 +156,7 @@ export default function Home() {
                   {product.name}
                 </h3>
                 <p className="mt-1 text-sm font-bold text-strawberry-700">
-                  {product.price}
+                  {formatPrice(product.price)}
                 </p>
                 <Button variant="outline" size="sm" fullWidth className="mt-4">
                   Tambah ke keranjang
