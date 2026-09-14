@@ -1,8 +1,53 @@
 @import "tailwindcss";
 
+/* Pastel bakery palette. Every token below becomes a Tailwind utility,
+   e.g. --color-strawberry-700 -> bg-strawberry-700 / text-strawberry-700. */
+@theme {
+  /* Strawberry — the brand pink */
+  --color-strawberry-50: #fff5f8;
+  --color-strawberry-100: #ffe6ee;
+  --color-strawberry-200: #fccfdf;
+  --color-strawberry-300: #f7aec6;
+  --color-strawberry-400: #ef8aa9;
+  --color-strawberry-500: #e2698f;
+  --color-strawberry-600: #cf4c74;
+  --color-strawberry-700: #bd335e;
+  --color-strawberry-800: #99294c;
+
+  /* Cream — pastry base, backgrounds and borders */
+  --color-cream-50: #fffdf9;
+  --color-cream-100: #fffbf3;
+  --color-cream-200: #fdf3e3;
+  --color-cream-300: #f7e8cf;
+  --color-cream-400: #e8d9be;
+
+  /* Butter — custard yellow accent */
+  --color-butter-100: #fff6dd;
+  --color-butter-200: #ffedc0;
+  --color-butter-300: #fbdf9b;
+  --color-butter-400: #f5cd72;
+
+  /* Pistachio — mint green accent */
+  --color-pistachio-100: #e8f5ee;
+  --color-pistachio-200: #cdeadb;
+  --color-pistachio-300: #a5d8bf;
+  --color-pistachio-400: #7cc3a2;
+
+  /* Blueberry — soft lavender accent */
+  --color-blueberry-100: #eeecfb;
+  --color-blueberry-200: #dcd8f4;
+  --color-blueberry-300: #bfb7e8;
+
+  /* Cocoa — chocolate browns, used for text */
+  --color-cocoa-300: #b39b89;
+  --color-cocoa-500: #8a6a57;
+  --color-cocoa-700: #5c4436;
+  --color-cocoa-900: #3d2c22;
+}
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: var(--color-cream-100);
+  --foreground: var(--color-cocoa-900);
 }
 
 @theme inline {
@@ -12,15 +57,13 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+}
+
+::selection {
+  background: var(--color-strawberry-100);
+  color: var(--color-strawberry-800);
 }
