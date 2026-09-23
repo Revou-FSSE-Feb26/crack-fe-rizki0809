@@ -121,9 +121,7 @@ export const products: Product[] = [
 ];
 
 /**
- * Format manual (bukan Intl) supaya hasilnya identik di server dan browser,
- * jadi tidak memicu hydration mismatch.
+ * Pindah ke lib/format.ts supaya bisa dipakai halaman yang datanya dari API,
+ * bukan dari berkas mock ini. Diekspor ulang di sini agar impor lama tetap jalan.
  */
-export function formatPrice(value: number) {
-  return `Rp ${value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".")}`;
-}
+export { formatPrice } from "../lib/format";
