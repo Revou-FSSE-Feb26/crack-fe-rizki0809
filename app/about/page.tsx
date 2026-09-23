@@ -6,7 +6,7 @@ import Card from "../components/card";
 export const metadata: Metadata = {
   title: "Tentang Kami — Hadish Cake",
   description:
-    "Cerita di balik Hadish Cake: dari dapur rumah di Jakarta sampai ribuan kue yang sudah diantar.",
+    "Cerita di balik Hadish Cake: dari dapur rumah di Jakarta sampai ribuan kue yang sudah dibawa pulang pelanggan.",
 };
 
 const values = [
@@ -27,7 +27,7 @@ const values = [
   {
     title: "Ramah ke pelanggan",
     description:
-      "Salah kirim atau kue tidak sesuai? Kami ganti tanpa banyak tanya.",
+      "Kue tidak sesuai pesanan? Kami ganti tanpa banyak tanya.",
     emoji: "💝",
     tone: "bg-blueberry-200",
   },
@@ -48,7 +48,7 @@ const milestones = [
   },
   {
     year: "2023",
-    title: "1.000 pesanan terkirim",
+    title: "1.000 pesanan selesai",
     description:
       "Custom cake jadi layanan paling diminati, terutama untuk ulang tahun anak.",
   },

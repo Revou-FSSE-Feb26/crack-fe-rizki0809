@@ -2,14 +2,23 @@
 
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import { useState } from "react";
 import Alert from "../components/alert";
-import { buttonStyles } from "../components/button";
+import Button, { buttonStyles } from "../components/button";
 import Card from "../components/card";
+import Input from "../components/input";
 import OrderStatusBadge from "../components/order-status-badge";
-import { Skeleton } from "../components/spinner";
+import Spinner, { Skeleton } from "../components/spinner";
+import { ApiError } from "../lib/api";
 import { useAuth } from "../lib/auth-context";
-import { formatPickupDate, formatPrice, formatShortDate } from "../lib/format";
-import type { Order, Paginated } from "../lib/types";
+import {
+  earliestPickupDate,
+  formatPickupDate,
+  formatPrice,
+  formatShortDate,
+  toDateInputValue,
+} from "../lib/format";
+import type { Order, OrderStatus, Paginated } from "../lib/types";
 import { useApiResource } from "../lib/use-api-resource";
 
 export default function OrdersClient() {
@@ -17,16 +26,18 @@ export default function OrdersClient() {
   const searchParams = useSearchParams();
 
   // Backend otomatis membatasi hasilnya ke pesanan milik yang login.
-  const { data, error, loading, reload } = useApiResource<Paginated<Order>>(
-    "/orders?limit=50",
-    { enabled: status === "authenticated" }
-  );
+  const { data, error, initialLoading, refreshing, reload } =
+    useApiResource<Paginated<Order>>("/orders?limit=50", {
+      enabled: status === "authenticated",
+    });
 
   // Dikirim proxy.ts saat customer mencoba membuka halaman admin.
   const wasForbidden = searchParams.get("error") === "forbidden";
+  // Dikirim halaman keranjang setelah pesanan berhasil dibuat.
+  const newOrderNumber = searchParams.get("baru");
 
   const orders = data?.data ?? [];
-  const isBusy = status === "loading" || loading;
+  const isBusy = status === "loading" || initialLoading;
 
   return (
     <>
@@ -38,6 +49,13 @@ export default function OrdersClient() {
             : "Riwayat pesanan kamu."}
         </p>
       </header>
+
+      {newOrderNumber && (
+        <Alert variant="success" title="Pesanan berhasil dibuat" className="mb-5">
+          Nomor pesananmu <strong>{newOrderNumber}</strong>. Kami akan
+          mengonfirmasinya sebentar lagi — pantau statusnya di daftar bawah ini.
+        </Alert>
+      )}
 
       {wasForbidden && (
         <Alert variant="info" className="mb-5">
@@ -83,12 +101,13 @@ export default function OrdersClient() {
           <p className="mb-4 text-sm text-cocoa-500">
             Menampilkan {orders.length} dari {data?.meta.total ?? orders.length}{" "}
             pesanan
+            {refreshing && <span className="ml-2">· memperbarui…</span>}
           </p>
 
           <ul className="flex flex-col gap-4">
             {orders.map((order) => (
               <li key={order.id}>
-                <OrderCard order={order} />
+                <OrderCard order={order} onChanged={reload} />
               </li>
             ))}
           </ul>
@@ -98,7 +117,16 @@ export default function OrdersClient() {
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+/** Status yang isinya masih boleh diubah customer, sesuai aturan backend. */
+const editableStatuses: OrderStatus[] = ["PENDING", "CONFIRMED"];
+
+function OrderCard({
+  order,
+  onChanged,
+}: {
+  order: Order;
+  onChanged: () => void;
+}) {
   return (
     <Card>
       <div className="flex flex-wrap items-start justify-between gap-3">
@@ -155,6 +183,8 @@ function OrderCard({ order }: { order: Order }) {
           {formatPrice(order.totalPrice)}
         </span>
       </div>
+
+      <OrderActions order={order} onChanged={onChanged} />
     </Card>
   );
 }
@@ -174,6 +204,197 @@ function OrdersSkeleton() {
           <Skeleton className="mt-4 h-9" />
         </Card>
       ))}
+    </div>
+  );
+}
+
+/**
+ * Tombol aksi milik customer: mengganti tanggal pengambilan dan membatalkan
+ * pesanan. Keduanya hanya berlaku selama pesanan belum diproses lebih jauh —
+ * aturan yang sama juga ditegakkan backend.
+ */
+function OrderActions({
+  order,
+  onChanged,
+}: {
+  order: Order;
+  onChanged: () => void;
+}) {
+  const { request } = useAuth();
+
+  const [mode, setMode] = useState<"idle" | "reschedule" | "confirm-cancel">(
+    "idle"
+  );
+  const [pickupDate, setPickupDate] = useState(() =>
+    toDateInputValue(order.pickupDate)
+  );
+  const [busy, setBusy] = useState<"date" | "cancel" | null>(null);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const earliest = earliestPickupDate();
+
+  if (!editableStatuses.includes(order.status)) {
+    return (
+      <p className="mt-4 border-t border-cream-300 pt-4 text-sm text-cocoa-500">
+        {order.status === "CANCELLED"
+          ? "Pesanan ini sudah dibatalkan."
+          : order.status === "COMPLETED"
+            ? "Pesanan ini sudah selesai. Terima kasih!"
+            : "Pesanan sedang disiapkan, jadi tanggalnya tidak bisa diubah lagi."}
+      </p>
+    );
+  }
+
+  async function run(
+    action: "date" | "cancel",
+    send: () => Promise<unknown>
+  ) {
+    if (busy) return;
+
+    setBusy(action);
+    setErrors([]);
+
+    try {
+      await send();
+      setMode("idle");
+      onChanged();
+    } catch (error) {
+      setErrors(
+        error instanceof ApiError
+          ? error.messages
+          : ["Terjadi kesalahan. Coba lagi."]
+      );
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  function saveDate() {
+    if (pickupDate < earliest) {
+      setErrors([
+        `Tanggal paling cepat ${earliest}, karena kue dibuat H-1.`,
+      ]);
+      return;
+    }
+
+    void run("date", () =>
+      request(`/orders/${order.id}/pickup-date`, {
+        method: "PATCH",
+        body: { pickupDate },
+      })
+    );
+  }
+
+  return (
+    <div className="mt-4 border-t border-cream-300 pt-4">
+      {errors.length > 0 && (
+        <Alert messages={errors} className="mb-3" />
+      )}
+
+      {mode === "idle" && (
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              setErrors([]);
+              setPickupDate(toDateInputValue(order.pickupDate));
+              setMode("reschedule");
+            }}
+          >
+            Ganti tanggal
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setErrors([]);
+              setMode("confirm-cancel");
+            }}
+          >
+            Batalkan pesanan
+          </Button>
+        </div>
+      )}
+
+      {mode === "reschedule" && (
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="min-w-48 flex-1">
+            <Input
+              label="Tanggal pengambilan baru"
+              name="pickupDate"
+              type="date"
+              value={pickupDate}
+              min={earliest}
+              onChange={(event) => {
+                setPickupDate(event.target.value);
+                setErrors([]);
+              }}
+              hint={`Paling cepat ${earliest}.`}
+              disabled={busy !== null}
+            />
+          </div>
+          <div className="flex gap-2 pb-6">
+            <Button size="sm" disabled={busy !== null} onClick={saveDate}>
+              {busy === "date" ? (
+                <>
+                  <Spinner label="Menyimpan" />
+                  Menyimpan…
+                </>
+              ) : (
+                "Simpan"
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy !== null}
+              onClick={() => {
+                setMode("idle");
+                setErrors([]);
+              }}
+            >
+              Batal
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {mode === "confirm-cancel" && (
+        <div className="flex flex-wrap items-center gap-3">
+          <p className="text-sm font-semibold text-cocoa-700">
+            Batalkan pesanan ini? Tindakan ini tidak bisa dibatalkan.
+          </p>
+          <div className="flex gap-2">
+            <Button
+              size="sm"
+              disabled={busy !== null}
+              onClick={() =>
+                void run("cancel", () =>
+                  request(`/orders/${order.id}/cancel`, { method: "PATCH" })
+                )
+              }
+            >
+              {busy === "cancel" ? (
+                <>
+                  <Spinner label="Membatalkan" />
+                  Memproses…
+                </>
+              ) : (
+                "Ya, batalkan"
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={busy !== null}
+              onClick={() => setMode("idle")}
+            >
+              Tidak
+            </Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

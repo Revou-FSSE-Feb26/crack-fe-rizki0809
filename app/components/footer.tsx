@@ -1,28 +1,32 @@
 import Link from "next/link";
 
+/**
+ * Setiap tautan diarahkan ke halaman yang benar-benar ada dan relevan.
+ * Sebelumnya beberapa di antaranya menunjuk ke /help yang belum dibuat,
+ * dan tiga tautan "Belanja" semuanya jatuh ke halaman yang sama.
+ */
 const footerNav = [
   {
     title: "Belanja",
     links: [
       { label: "Semua Kue", href: "/products" },
-      { label: "Best Seller", href: "/products" },
-      { label: "Custom Cake", href: "/products" },
+      { label: "Best Seller", href: "/products?favorit=1" },
+      { label: "Custom Cake", href: "/products?kategori=custom" },
     ],
   },
   {
     title: "Bantuan",
     links: [
-      { label: "Cara Pesan", href: "/help" },
-      { label: "Pengiriman", href: "/help" },
-      { label: "FAQ", href: "/help" },
+      { label: "Cara Pesan", href: "/help#cara-pesan" },
+      { label: "Pengambilan", href: "/help#pengiriman" },
+      { label: "FAQ", href: "/help#faq" },
     ],
   },
   {
     title: "Tentang",
     links: [
       { label: "Tentang Kami", href: "/about" },
-      { label: "Kontak", href: "/about" },
-      { label: "Karier", href: "/about" },
+      { label: "Kontak", href: "/help#kontak" },
     ],
   },
 ];

@@ -14,7 +14,7 @@ import { homePathFor, readValidSession, SESSION_COOKIE } from "@/app/lib/session
  */
 
 /** Wajib login. */
-const protectedPrefixes = ["/orders", "/admin"];
+const protectedPrefixes = ["/orders", "/admin", "/account"];
 
 /** Wajib login DAN ber-role ADMIN. */
 const adminPrefixes = ["/admin"];

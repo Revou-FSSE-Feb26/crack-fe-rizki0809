@@ -57,3 +57,28 @@ export function formatShortDate(isoDate: string): string {
 
   return `${date.getUTCDate()} ${MONTH_NAMES[date.getUTCMonth()]} ${date.getUTCFullYear()}`;
 }
+
+/**
+ * Tanggal paling awal yang boleh dipilih untuk pengambilan: besok, sesuai
+ * aturan toko bahwa pesanan dibuat paling lambat H-1. Dihitung dari waktu
+ * lokal pengguna; server tetap memeriksa ulang dan jadi penentu akhir.
+ */
+export function earliestPickupDate(): string {
+  const date = new Date();
+  date.setDate(date.getDate() + 1);
+  return toDateInputValue(date);
+}
+
+/** Mengubah Date atau string ISO menjadi "YYYY-MM-DD" untuk <input type="date">. */
+export function toDateInputValue(value: Date | string): string {
+  const date = typeof value === "string" ? new Date(value) : value;
+  if (Number.isNaN(date.getTime())) return "";
+
+  const pad = (n: number) => String(n).padStart(2, "0");
+
+  // String ISO dari backend adalah tanggal saja pada tengah malam UTC, jadi
+  // dibaca sebagai UTC agar tidak bergeser sehari.
+  return typeof value === "string"
+    ? `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}`
+    : `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

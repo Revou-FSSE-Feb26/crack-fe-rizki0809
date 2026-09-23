@@ -1,10 +1,7 @@
 import Link from "next/link";
-import Button, { buttonStyles } from "./components/button";
+import { buttonStyles } from "./components/button";
 import Card from "./components/card";
-import Input from "./components/input";
-import { categories, formatPrice, products } from "./data/products";
-
-const bestSellers = products.filter((product) => product.bestSeller);
+import { BestSellers, CategoryGrid } from "./home-catalog";
 
 const stats = [
   { value: "500+", label: "Pelanggan senang" },
@@ -23,15 +20,15 @@ const features = [
   {
     title: "Dipanggang hari ini",
     description:
-      "Semua pesanan dibuat di hari pengiriman, jadi kue sampai dalam kondisi fresh.",
+      "Semua pesanan dibuat di hari pengambilan, jadi kue kamu benar-benar fresh.",
     emoji: "⏰",
     tone: "bg-pistachio-200",
   },
   {
-    title: "Antar tepat waktu",
+    title: "Tinggal ambil di toko",
     description:
-      "Gratis ongkir area Jakarta untuk pembelian di atas Rp 200.000.",
-    emoji: "🚚",
+      "Pesan paling lambat H-1, kuenya sudah siap saat kamu datang menjemput.",
+    emoji: "🏪",
     tone: "bg-blueberry-200",
   },
 ];
@@ -52,8 +49,8 @@ export default function Home() {
                 <span className="text-strawberry-700">momen manis</span> kamu
               </h1>
               <p className="mt-4 max-w-md text-cocoa-500">
-                Dari ulang tahun sampai syukuran kecil di rumah. Pesan hari ini,
-                kami panggang dan antar sampai depan pintu.
+                Dari ulang tahun sampai syukuran kecil di rumah. Pesan
+                sekarang, kuenya kami panggang, tinggal kamu ambil di toko.
               </p>
 
               <div className="mt-8 flex flex-wrap gap-3">
@@ -102,27 +99,7 @@ export default function Home() {
           Cari yang paling pas untuk acara kamu.
         </p>
 
-        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
-          {categories.map((category) => (
-            <Link
-              key={category.slug}
-              href={`/products?kategori=${category.slug}`}
-              className="group"
-            >
-              <Card
-                variant="soft"
-                className="text-center transition duration-300 group-hover:border-strawberry-300"
-              >
-                <span className={`inline-block rounded-2xl ${category.tone} p-4 text-3xl`}>
-                  {category.emoji}
-                </span>
-                <p className="mt-3 font-semibold text-cocoa-900">
-                  {category.name}
-                </p>
-              </Card>
-            </Link>
-          ))}
-        </div>
+        <CategoryGrid />
       </section>
 
       {/* ---------- Best seller ---------- */}
@@ -143,27 +120,7 @@ export default function Home() {
             </Link>
           </div>
 
-          <div className="mt-6 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {bestSellers.map((product) => (
-              <Card key={product.name} className="flex flex-col">
-                <div
-                  className={`flex aspect-[4/3] items-center justify-center rounded-2xl text-5xl ${product.tone}`}
-                  aria-hidden="true"
-                >
-                  {product.emoji}
-                </div>
-                <h3 className="mt-4 font-semibold text-cocoa-900">
-                  {product.name}
-                </h3>
-                <p className="mt-1 text-sm font-bold text-strawberry-700">
-                  {formatPrice(product.price)}
-                </p>
-                <Button variant="outline" size="sm" fullWidth className="mt-4">
-                  Tambah ke keranjang
-                </Button>
-              </Card>
-            ))}
-          </div>
+          <BestSellers />
         </div>
       </section>
 
@@ -190,29 +147,33 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ---------- Newsletter ---------- */}
+      {/* ---------- Ajakan menghubungi ---------- */}
       <section className="mx-auto max-w-6xl px-4 pb-20 sm:px-6 lg:px-8">
         <Card variant="soft" className="px-6 py-10 text-center">
           <h2 className="text-2xl font-bold text-cocoa-900">
-            Dapat info promo duluan
+            Mau kue yang tidak ada di menu?
           </h2>
           <p className="mx-auto mt-2 max-w-md text-sm text-cocoa-500">
-            Daftar newsletter dan dapatkan diskon 10% untuk pesanan pertama
-            kamu.
+            Untuk custom cake, jumlah besar, atau sekadar bertanya soal pesanan,
+            chat kami langsung. Dibalas pada jam buka toko.
           </p>
 
-          <form className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row">
-            <div className="flex-1">
-              <Input
-                type="email"
-                name="email"
-                placeholder="nama@email.com"
-                aria-label="Alamat email"
-                required
-              />
-            </div>
-            <Button type="submit">Daftar</Button>
-          </form>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <a
+              href="https://wa.me/6281234567890"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={buttonStyles()}
+            >
+              Chat WhatsApp
+            </a>
+            <Link
+              href="/help"
+              className={buttonStyles({ variant: "outline" })}
+            >
+              Baca cara pesan
+            </Link>
+          </div>
         </Card>
       </section>
     </main>

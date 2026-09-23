@@ -1,14 +1,18 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ApiError } from "./api";
+import { ApiError, apiFetch } from "./api";
 import { useAuth } from "./auth-context";
 
 type ResourceState<T> = {
   data: T | null;
   error: ApiError | null;
-  /** True saat pengambilan data pertama maupun saat "Coba lagi" ditekan. */
+  /** True selama request berjalan, termasuk saat memuat ulang. */
   loading: boolean;
+  /** True hanya saat pemuatan pertama, waktu belum ada data sama sekali. */
+  initialLoading: boolean;
+  /** True saat memuat ulang sementara data lama masih ditampilkan. */
+  refreshing: boolean;
   reload: () => void;
 };
 
@@ -21,24 +25,26 @@ type Result<T> = {
 
 const emptyResult: Result<never> = { key: "", data: null, error: null };
 
+type Fetcher = <T>(path: string, options: { signal: AbortSignal }) => Promise<T>;
+
 /**
- * Mengambil data dari API yang butuh login, lengkap dengan status loading,
- * error, dan tombol muat ulang.
+ * Inti dari kedua hook di bawah.
  *
- * Tiga hal yang dijaga di sini:
+ * Empat hal yang dijaga di sini:
  * - request dibatalkan saat komponen dilepas atau saat path berubah, supaya
  *   jawaban request lama tidak menimpa hasil request yang lebih baru;
- * - selama sesi belum diketahui (`enabled` masih false), request ditahan dulu
- *   agar tidak terkirim tanpa token lalu gagal 401;
  * - `loading` diturunkan dari hasil terakhir, bukan di-set di dalam effect,
- *   sehingga tidak memicu render berantai.
+ *   sehingga tidak memicu render berantai;
+ * - data lama tetap dipegang selama memuat ulang, jadi layar tidak berkedip
+ *   kosong setiap kali daftar disegarkan;
+ * - `enabled` menahan request selama syaratnya belum siap (misalnya sesi
+ *   belum diketahui), supaya tidak terkirim tanpa token lalu gagal 401.
  */
-export function useApiResource<T>(
+function useResource<T>(
   path: string,
-  { enabled = true }: { enabled?: boolean } = {}
+  fetcher: Fetcher,
+  enabled: boolean
 ): ResourceState<T> {
-  const { request } = useAuth();
-
   // Dinaikkan oleh reload() untuk memicu pengambilan ulang path yang sama.
   const [attempt, setAttempt] = useState(0);
   const [result, setResult] = useState<Result<T>>(emptyResult);
@@ -56,7 +62,7 @@ export function useApiResource<T>(
 
     const controller = new AbortController();
 
-    request<T>(path, { signal: controller.signal })
+    fetcher<T>(path, { signal: controller.signal })
       .then((data) => {
         if (controller.signal.aborted) return;
         setResult({ key, data, error: null });
@@ -66,6 +72,8 @@ export function useApiResource<T>(
 
         setResult({
           key,
+          // Data lama dibuang saat error, supaya tidak ada informasi basi
+          // yang tampil bersamaan dengan pesan kegagalan.
           data: null,
           error:
             caught instanceof ApiError
@@ -75,7 +83,37 @@ export function useApiResource<T>(
       });
 
     return () => controller.abort();
-  }, [path, enabled, key, request]);
+  }, [path, enabled, key, fetcher]);
 
-  return { data: result.data, error: result.error, loading, reload };
+  return {
+    data: result.data,
+    error: result.error,
+    loading,
+    initialLoading: loading && result.data === null,
+    refreshing: loading && result.data !== null,
+    reload,
+  };
 }
+
+/** Untuk endpoint yang butuh login. Token dan penanganan 401 sudah diurus. */
+export function useApiResource<T>(
+  path: string,
+  { enabled = true }: { enabled?: boolean } = {}
+): ResourceState<T> {
+  const { request } = useAuth();
+  return useResource<T>(path, request as Fetcher, enabled);
+}
+
+/**
+ * Untuk endpoint publik seperti katalog menu. Sengaja tidak lewat auth context
+ * agar datanya tidak diambil ulang hanya karena status login berubah.
+ */
+export function usePublicResource<T>(
+  path: string,
+  { enabled = true }: { enabled?: boolean } = {}
+): ResourceState<T> {
+  return useResource<T>(path, publicFetcher, enabled);
+}
+
+const publicFetcher: Fetcher = (path, options) =>
+  apiFetch(path, { signal: options.signal });
