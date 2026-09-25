@@ -40,3 +40,8 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# berkas panduan untuk AI coding assistant
+# AGENTS.md ditulis ulang otomatis oleh `next dev`, jadi tidak perlu ikut di-commit
+CLAUDE.md
+AGENTS.md
