@@ -316,4 +316,24 @@ Karena itu pilihannya dikunci di `app/lib/tones.ts` — daftar itu sekaligus yan
 membuat kelas-kelasnya ikut ter-generate. Menambah warna baru harus lewat
 berkas itu, bukan dengan mengetik nama kelas bebas di form admin.
 
+---
 
+### Dokumentasi 
+
+## Admin
+Dashboard admin untuk mengatur menu
+![dashboard admin menu](./public/adminMenu.png)
+
+Dashboard admin untuk mengatur pesanan
+![dashboard admin pesanan](./public/dashboard.png)
+
+## Customer
+
+Homepage untuk user 
+![dashboard admin menu](./public/homePage.png)
+
+User cart
+![dashboard admin menu](./public/userCart.png)
+
+user History
+![dashboard admin menu](./public/userHistory.png)
