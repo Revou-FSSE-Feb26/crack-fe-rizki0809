@@ -325,7 +325,7 @@ Dashboard admin untuk mengatur menu
 ![dashboard admin menu](./public/adminMenu.png)
 
 Dashboard admin untuk mengatur pesanan
-![dashboard admin pesanan](./public/dashboard.png)
+![dashboard admin pesanan](./public/dashboardAdmin.png)
 
 ## Customer
 
